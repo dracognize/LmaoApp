@@ -1,0 +1,10 @@
+//
+// Created by hechb on 3/25/2026.
+//
+
+#ifndef LMAOAPP_WINDOWSETUP_HPP
+#define LMAOAPP_WINDOWSETUP_HPP
+
+
+
+#endif //LMAOAPP_WINDOWSETUP_HPP
