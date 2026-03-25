@@ -5,6 +5,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include <iostream>
+#include <print>
 
 int main() {
 	// Init GLFW
