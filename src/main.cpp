@@ -5,7 +5,6 @@
 #include "imgui_impl_opengl3.h"
 
 #include <iostream>
-#include <print>
 
 int main() {
 	// Init GLFW
@@ -40,6 +39,8 @@ int main() {
 	);
 
 	int cnt = 0;
+
+	std::cout << "Loop starting";
 
 	// Main loop
 	while (!glfwWindowShouldClose(window)) {
