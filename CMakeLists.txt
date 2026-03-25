@@ -30,7 +30,10 @@ set(IMGUI_SOURCES
 )
 
 add_library(imgui ${IMGUI_SOURCES})
-target_include_directories(imgui PUBLIC ${IMGUI_DIR})
+target_include_directories(imgui PUBLIC
+        ${IMGUI_DIR}
+        ${GLFW_DIR}/include
+)
 
 # App
 add_executable(LmaoApp src/main.cpp)
