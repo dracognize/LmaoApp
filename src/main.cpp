@@ -9,7 +9,11 @@
 int main() {
 	// Init GLFW
 	glfwInit();
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Lmao App", nullptr, nullptr);
+	GLFWmonitor*       monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode    = glfwGetVideoMode(monitor);
+	const int          width   = mode->width / 2;
+	const int          height  = mode->height * 3 / 4;
+	GLFWwindow*        window  = glfwCreateWindow(width, height, "Lmao App", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 
 	// Setup ImGui
@@ -19,6 +23,8 @@ int main() {
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
+
+	int cnt = 0;
 
 	// Main loop
 	while (!glfwWindowShouldClose(window)) {
@@ -30,11 +36,17 @@ int main() {
 		ImGui::NewFrame();
 
 		// UI
-		ImGui::SetNextWindowSize({ 800, 600 });
-		ImGui::SetNextWindowPos({0,0});
-		ImGui::Begin("Hello", nullptr, ImGuiWindowFlags_NoTitleBar);
-		ImGui::Text("This is ImGui!");
-		ImGui::Button("Click me");
+		ImGui::SetNextWindowSize({static_cast<float>(width), static_cast<float>(height)});
+		ImGui::SetNextWindowPos({0, 0});
+		ImGui::Begin("Hello", nullptr,
+					 ImGuiWindowFlags_NoTitleBar
+					 | ImGuiWindowFlags_NoCollapse
+					 | ImGuiWindowFlags_NoResize
+					 | ImGuiWindowFlags_NoMove);
+		ImGui::Text("Counter: %d", cnt);
+		if (ImGui::Button("Increase")) {
+			cnt++;
+		}
 		ImGui::End();
 
 		// Render
