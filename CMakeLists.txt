@@ -44,3 +44,13 @@ target_link_libraries(LmaoApp
         glfw
         OpenGL::GL
 )
+
+# Ensure assets directory exists
+file(GLOB ASSETS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/assets/*")
+
+add_custom_command(TARGET LmaoApp POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:LmaoApp>/assets"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${ASSETS}
+        "$<TARGET_FILE_DIR:LmaoApp>/assets"
+)

@@ -24,6 +24,20 @@ int main() {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
+	ImFont* smallFont = io.Fonts->AddFontFromFileTTF(
+	"assets/BeVietnamPro-Regular.ttf",
+	24.0f,
+	nullptr,
+	io.Fonts->GetGlyphRangesVietnamese()
+	);
+
+	ImFont* bigFont = io.Fonts->AddFontFromFileTTF(
+	"assets/BeVietnamPro-Regular.ttf",
+	36.0f,
+	nullptr,
+	io.Fonts->GetGlyphRangesVietnamese()
+	);
+
 	int cnt = 0;
 
 	// Main loop
@@ -43,10 +57,14 @@ int main() {
 					 | ImGuiWindowFlags_NoCollapse
 					 | ImGuiWindowFlags_NoResize
 					 | ImGuiWindowFlags_NoMove);
+		ImGui::PushFont(bigFont);
 		ImGui::Text("Counter: %d", cnt);
+		ImGui::PopFont();
+		ImGui::PushFont(smallFont);
 		if (ImGui::Button("Increase")) {
 			cnt++;
 		}
+		ImGui::PopFont();
 		ImGui::End();
 
 		// Render
