@@ -32,6 +32,9 @@ public:
 		ImFont* myFont = this->io->Fonts->AddFontFromFileTTF("assets/BeVietnamPro-Regular.ttf",
 															 36.0f);
 		if (!myFont) fmt::print(fg(fmt::color::red), "Failed to load font!\n");
+
+		int page_selected = 0;
+		bool enable_feature = false;
 		while (!glfwWindowShouldClose(this->window)) {
 			glfwPollEvents();
 
@@ -47,9 +50,43 @@ public:
 							 | ImGuiWindowFlags_NoResize
 							 | ImGuiWindowFlags_NoMove
 							 | ImGuiWindowFlags_NoCollapse)) {
-				if (ImGui::Button("Quit")) {
-					glfwSetWindowShouldClose(this->window, GLFW_TRUE);
+				// Get full window size
+				ImVec2 size = ImGui::GetContentRegionAvail();
+
+				// Left panel width
+				float left_width = 150.0f;
+
+				// LEFT: Navigator
+				ImGui::BeginChild("Navigator", ImVec2(left_width, 0), true);
+
+				if (ImGui::Selectable("Home", page_selected == 0)) page_selected = 0;
+				if (ImGui::Selectable("Settings", page_selected == 1)) page_selected = 1;
+				if (ImGui::Selectable("Profile", page_selected == 2)) page_selected = 2;
+
+				ImGui::EndChild();
+
+				ImGui::SameLine();
+
+				// RIGHT: Content
+				ImGui::BeginChild("Content", ImVec2(0, 0), true);
+
+				if (page_selected == 0) {
+					ImGui::Text("Home Page");
+					ImGui::Separator();
+					ImGui::Text("Welcome to the home screen!");
 				}
+				else if (page_selected == 1) {
+					ImGui::Text("Settings");
+					ImGui::Separator();
+					ImGui::Checkbox("Enable feature", &enable_feature);
+				}
+				else if (page_selected == 2) {
+					ImGui::Text("Profile");
+					ImGui::Separator();
+					ImGui::Text("User info goes here.");
+				}
+
+				ImGui::EndChild();
 			}
 			ImGui::End();
 			ImGui::PopFont();
