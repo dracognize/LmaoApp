@@ -25,8 +25,6 @@ public:
 		return instance;
 	}
 
-	int width, height;
-
 	ImGuiIO*    io;
 	GLFWwindow* window;
 
@@ -80,10 +78,8 @@ private:
 
 		GLFWmonitor*       monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode    = glfwGetVideoMode(monitor);
-		this->width                = mode->width * 3 / 4;
-		this->height               = mode->height * 3 / 4;
-		this->window               = glfwCreateWindow(this->width,this->height, "Lmao App",
-													  nullptr, nullptr);
+		this->window               = glfwCreateWindow(mode->width * 3 / 4, mode->height * 3 / 4,
+										"Lmao App", nullptr, nullptr);
 
 		if (!window) {
 			fmt::print(fg(fmt::color::red), "Failed to create GLFW window\n");
