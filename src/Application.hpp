@@ -42,8 +42,8 @@ public:
 			ImGui::NewFrame();
 
 			ImGui::PushFont(myFont);
-			ImGui::SetNextWindowSize({static_cast<float>(this->width), static_cast<float>(this->height)});
-			ImGui::SetNextWindowPos({0, 0});
+			ImGui::SetNextWindowPos(ImVec2(0, 0));
+			ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 			if (ImGui::Begin("MainWindow", nullptr,
 							 ImGuiWindowFlags_NoTitleBar
 							 | ImGuiWindowFlags_NoResize
@@ -84,6 +84,12 @@ private:
 		this->height               = mode->height * 3 / 4;
 		this->window               = glfwCreateWindow(width, height, "Lmao App",
 													  nullptr, nullptr);
+
+		if (!window) {
+			fmt::print(fg(fmt::color::red), "Failed to create GLFW window\n");
+			glfwTerminate();
+			std::exit(EXIT_FAILURE);
+		}
 
 		glfwMakeContextCurrent(window);
 
