@@ -82,7 +82,7 @@ private:
 		const GLFWvidmode* mode    = glfwGetVideoMode(monitor);
 		this->width                = mode->width * 3 / 4;
 		this->height               = mode->height * 3 / 4;
-		this->window               = glfwCreateWindow(width, height, "Lmao App",
+		this->window               = glfwCreateWindow(this->width,this->height, "Lmao App",
 													  nullptr, nullptr);
 
 		if (!window) {
