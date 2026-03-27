@@ -1,14 +1,16 @@
 #pragma once
-#include <functional>
-#include <string>
+#include <bits/stdc++.h>
 
-#include <fmt/core.h>
 #include <fmt/color.h>
 
 #include "GLFW/glfw3.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+
+#include "lib/BasePage.hpp"
+#include "lib/HomePage.hpp"
+#include "lib/SettingPage.hpp"
 
 class Application {
 public:
@@ -33,8 +35,14 @@ public:
 															 36.0f);
 		if (!myFont) fmt::print(fg(fmt::color::red), "Failed to load font!\n");
 
-		int page_selected = 0;
-		bool enable_feature = false;
+		struct PageEntry {
+			std::string               pageNavName;
+			std::unique_ptr<BasePage> page;
+		};
+		std::vector<PageEntry> pages;
+		pages.emplace_back("Home Page", std::make_unique<HomePage>());
+		pages.emplace_back("Settings", std::make_unique<SettingPage>());
+		int currentPage = 0;
 		while (!glfwWindowShouldClose(this->window)) {
 			glfwPollEvents();
 
@@ -44,24 +52,22 @@ public:
 
 			ImGui::PushFont(myFont);
 			ImGui::SetNextWindowPos(ImVec2(0, 0));
-			ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+			ImGui::SetNextWindowSize(this->io->DisplaySize);
 			if (ImGui::Begin("MainWindow", nullptr,
 							 ImGuiWindowFlags_NoTitleBar
 							 | ImGuiWindowFlags_NoResize
 							 | ImGuiWindowFlags_NoMove
 							 | ImGuiWindowFlags_NoCollapse)) {
-				// Get full window size
-				ImVec2 size = ImGui::GetContentRegionAvail();
-
-				// Left panel width
-				float left_width = 150.0f;
-
 				// LEFT: Navigator
-				ImGui::BeginChild("Navigator", ImVec2(left_width, 0), true);
+				ImGui::BeginChild("Navigator",
+								  ImVec2(this->io->DisplaySize.x / 8, 0),
+								  true);
 
-				if (ImGui::Selectable("Home", page_selected == 0)) page_selected = 0;
-				if (ImGui::Selectable("Settings", page_selected == 1)) page_selected = 1;
-				if (ImGui::Selectable("Profile", page_selected == 2)) page_selected = 2;
+				for (int i = 0; i < pages.size(); i++) {
+					if (ImGui::Selectable(pages[i].pageNavName.c_str(), currentPage == i)) {
+						currentPage = i;
+					}
+				}
 
 				ImGui::EndChild();
 
@@ -70,21 +76,7 @@ public:
 				// RIGHT: Content
 				ImGui::BeginChild("Content", ImVec2(0, 0), true);
 
-				if (page_selected == 0) {
-					ImGui::Text("Home Page");
-					ImGui::Separator();
-					ImGui::Text("Welcome to the home screen!");
-				}
-				else if (page_selected == 1) {
-					ImGui::Text("Settings");
-					ImGui::Separator();
-					ImGui::Checkbox("Enable feature", &enable_feature);
-				}
-				else if (page_selected == 2) {
-					ImGui::Text("Profile");
-					ImGui::Separator();
-					ImGui::Text("User info goes here.");
-				}
+				pages[currentPage].page->Display();
 
 				ImGui::EndChild();
 			}
@@ -110,6 +102,64 @@ private:
 		std::string     value;
 	} _message = {fg(fmt::color::yellow), "Application exited."};
 
+	void SetModernGrayTheme() {
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		// 🎯 Layout
+		style.WindowRounding    = 6.0f;
+		style.FrameRounding     = 6.0f;
+		style.PopupRounding     = 6.0f;
+		style.ScrollbarRounding = 6.0f;
+		style.GrabRounding      = 6.0f;
+
+		style.WindowPadding = ImVec2(10, 10);
+		style.FramePadding  = ImVec2(10, 6);
+		style.ItemSpacing   = ImVec2(8, 6);
+
+		// 🎨 Colors
+		ImVec4* colors = style.Colors;
+
+		colors[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+		colors[ImGuiCol_ChildBg]  = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
+		colors[ImGuiCol_PopupBg]  = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
+
+		colors[ImGuiCol_Border] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+
+		// Text
+		colors[ImGuiCol_Text]         = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
+		colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+
+		// Buttons
+		colors[ImGuiCol_Button]        = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+		colors[ImGuiCol_ButtonHovered] = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
+		colors[ImGuiCol_ButtonActive]  = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
+
+		// Headers (Selectable, Tree, etc.)
+		colors[ImGuiCol_Header]        = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+		colors[ImGuiCol_HeaderHovered] = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
+		colors[ImGuiCol_HeaderActive]  = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
+
+		// Frame (input, checkbox, etc.)
+		colors[ImGuiCol_FrameBg]        = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+		colors[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.22f, 0.24f, 1.00f);
+		colors[ImGuiCol_FrameBgActive]  = ImVec4(0.28f, 0.28f, 0.30f, 1.00f);
+
+		// Tabs
+		colors[ImGuiCol_Tab]        = ImVec4(0.15f, 0.15f, 0.17f, 1.00f);
+		colors[ImGuiCol_TabHovered] = ImVec4(0.38f, 0.38f, 0.40f, 1.00f);
+		colors[ImGuiCol_TabActive]  = ImVec4(0.28f, 0.28f, 0.30f, 1.00f);
+
+		// Title
+		colors[ImGuiCol_TitleBg]       = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+		colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.15f, 0.17f, 1.00f);
+
+		// Scrollbar
+		colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.50f, 0.50f, 0.52f, 1.00f);
+	}
+
 	Application() {
 		glfwInit();
 
@@ -129,6 +179,7 @@ private:
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		this->io = &ImGui::GetIO();
+		SetModernGrayTheme();
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 330");
 	}
