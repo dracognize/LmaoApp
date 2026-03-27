@@ -124,8 +124,10 @@ public:
 				ImGui::PopStyleColor(2);
 				ImGui::PopStyleVar();
 				ImGui::PopFont();
-				ImGui::SetCursorPos({10, sizeofLmaoApp.y + 10});
+				ImGui::SetCursorPos({0, sizeofLmaoApp.y + 10});
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 				ImGui::Separator();
+				ImGui::PopStyleVar();
 				// LEFT: Navigator
 				ImGui::PushFont(smallFont);
 				ImGui::BeginChild("Navigator",
