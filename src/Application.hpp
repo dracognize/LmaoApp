@@ -3,7 +3,8 @@
 
 #include <fmt/color.h>
 
-#include "GLFW/glfw3.h"
+#include <windows.h>
+#include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -31,9 +32,28 @@ public:
 	GLFWwindow* window;
 
 	void Start() {
-		ImFont* myFont = this->io->Fonts->AddFontFromFileTTF("assets/BeVietnamPro-Regular.ttf",
-															 36.0f);
-		if (!myFont) fmt::print(fg(fmt::color::red), "Failed to load font!\n");
+		ImFontGlyphRangesBuilder builder;
+		builder.AddChar(0x2716);
+
+		ImVector<ImWchar> glyphRanges;
+		builder.BuildRanges(&glyphRanges);
+
+		ImFont* specFont = io->Fonts->AddFontFromFileTTF("assets/seguisym.ttf",
+														 24.0f, nullptr, glyphRanges.Data);
+
+		ImFont* smallFont = io->Fonts->AddFontFromFileTTF("assets/BeVietnamPro-Regular.ttf",
+														  24.0f, nullptr, io->Fonts->GetGlyphRangesVietnamese());
+		if (!smallFont)
+			fmt::print(fg(fmt::color::red), "Failed to load font!\n");
+		ImFont* medFont = io->Fonts->AddFontFromFileTTF("assets/BeVietnamPro-Regular.ttf",
+														36.0f, nullptr, io->Fonts->GetGlyphRangesVietnamese());
+		if (!medFont)
+			fmt::print(fg(fmt::color::red), "Failed to load font!\n");
+
+		ImFont* bigFont = io->Fonts->AddFontFromFileTTF("assets/BeVietnamPro-Regular.ttf",
+														48.0f, nullptr, io->Fonts->GetGlyphRangesVietnamese());
+		if (!bigFont)
+			fmt::print(fg(fmt::color::red), "Failed to load font!\n");
 
 		struct PageEntry {
 			std::string               pageNavName;
@@ -42,25 +62,74 @@ public:
 		std::vector<PageEntry> pages;
 		pages.emplace_back("Home Page", std::make_unique<HomePage>());
 		pages.emplace_back("Settings", std::make_unique<SettingPage>());
+
+		double dragOffsetX = 0, dragOffsetY = 0;
+		bool   isDragging  = false;
+
 		int currentPage = 0;
-		while (!glfwWindowShouldClose(this->window)) {
+
+		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
 
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 
-			ImGui::PushFont(myFont);
 			ImGui::SetNextWindowPos(ImVec2(0, 0));
-			ImGui::SetNextWindowSize(this->io->DisplaySize);
+			ImGui::SetNextWindowSize(io->DisplaySize);
 			if (ImGui::Begin("MainWindow", nullptr,
 							 ImGuiWindowFlags_NoTitleBar
 							 | ImGuiWindowFlags_NoResize
 							 | ImGuiWindowFlags_NoMove
 							 | ImGuiWindowFlags_NoCollapse)) {
+				ImGui::PushFont(medFont);
+				const ImVec2 sizeofLmaoApp = ImGui::CalcTextSize("LmaoApp");
+				ImGui::PushFont(specFont);
+				const ImVec2 sizeofExitText = ImGui::CalcTextSize("\u2716");
+				ImGui::PopFont();
+				ImGui::InvisibleButton("##titlebar",
+									   ImVec2(this->io->DisplaySize.x - sizeofExitText.x - sizeofLmaoApp.y - 5,
+											  sizeofLmaoApp.y + 10));
+				if (ImGui::IsItemActive() && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+					POINT p;
+					GetCursorPos(&p);
+					if (!isDragging) {
+						int winX, winY;
+						glfwGetWindowPos(window, &winX, &winY);
+						dragOffsetX = p.x - winX;
+						dragOffsetY = p.y - winY;
+						isDragging  = true;
+					}
+					else {
+						glfwSetWindowPos(window,
+										 static_cast<int>(p.x - dragOffsetX),
+										 static_cast<int>(p.y - dragOffsetY));
+					}
+				}
+				else {
+					isDragging = false;
+				}
+				ImGui::SetCursorPos(ImVec2((this->io->DisplaySize.x - sizeofLmaoApp.x) / 2, 5));
+				ImGui::Text("LmaoApp");
+
+				ImGui::SetCursorPos({this->io->DisplaySize.x - sizeofLmaoApp.y - 10, 0});
+				ImGui::PopFont();
+				ImGui::PushFont(specFont);;
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {1.0f, 0.2f, 0.2f, 1.0f});
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, {0.8f, 0.1f, 0.1f, 1.0f});
+				if (ImGui::Button("\u2716", {sizeofLmaoApp.y + 10, sizeofLmaoApp.y + 10})) {
+					glfwSetWindowShouldClose(window, GLFW_TRUE);
+				}
+				ImGui::PopStyleColor(2);
+				ImGui::PopStyleVar();
+				ImGui::PopFont();
+				ImGui::SetCursorPos({10, sizeofLmaoApp.y + 10});
+				ImGui::Separator();
 				// LEFT: Navigator
+				ImGui::PushFont(smallFont);
 				ImGui::BeginChild("Navigator",
-								  ImVec2(this->io->DisplaySize.x / 8, 0),
+								  ImVec2(io->DisplaySize.x / 8, 0),
 								  true);
 
 				for (int i = 0; i < pages.size(); i++) {
@@ -72,25 +141,26 @@ public:
 				ImGui::EndChild();
 
 				ImGui::SameLine();
-
 				// RIGHT: Content
 				ImGui::BeginChild("Content", ImVec2(0, 0), true);
 
 				pages[currentPage].page->Display();
 
 				ImGui::EndChild();
+
+				ImGui::PopFont();
 			}
 			ImGui::End();
-			ImGui::PopFont();
 
 			ImGui::Render();
 
+			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-			glfwSwapBuffers(this->window);
+			glfwSwapBuffers(window);
 		};
-		this->_message = {
+		_message = {
 			fg(fmt::color::light_green),
 			"Application running and exiting normally"
 		};
@@ -102,17 +172,10 @@ private:
 		std::string     value;
 	} _message = {fg(fmt::color::yellow), "Application exited."};
 
-	void SetModernGrayTheme() {
+	static void SetModernGrayTheme() {
 		ImGuiStyle& style = ImGui::GetStyle();
 
-		// 🎯 Layout
-		style.WindowRounding    = 6.0f;
-		style.FrameRounding     = 6.0f;
-		style.PopupRounding     = 6.0f;
-		style.ScrollbarRounding = 6.0f;
-		style.GrabRounding      = 6.0f;
-
-		style.WindowPadding = ImVec2(10, 10);
+		style.WindowPadding = ImVec2(5, 5);
 		style.FramePadding  = ImVec2(10, 6);
 		style.ItemSpacing   = ImVec2(8, 6);
 
@@ -165,8 +228,10 @@ private:
 
 		GLFWmonitor*       monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode    = glfwGetVideoMode(monitor);
-		this->window               = glfwCreateWindow(mode->width * 3 / 4, mode->height * 3 / 4,
-										"Lmao App", nullptr, nullptr);
+
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+		window = glfwCreateWindow(mode->width * 3 / 4, mode->height * 3 / 4,
+								  "Lmao App", nullptr, nullptr);
 
 		if (!window) {
 			fmt::print(fg(fmt::color::red), "Failed to create GLFW window\n");
@@ -174,18 +239,24 @@ private:
 			std::exit(EXIT_FAILURE);
 		}
 
+		const int xpos = (mode->width / 8) / 2;
+		const int ypos = (mode->height / 8) / 2;
+
+		glfwSetWindowPos(window, xpos, ypos);
+
+
 		glfwMakeContextCurrent(window);
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		this->io = &ImGui::GetIO();
+		io = &ImGui::GetIO();
 		SetModernGrayTheme();
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 330");
 	}
 
 	~Application() {
-		fmt::print(this->_message.style, "{}", this->_message.value);
+		fmt::print(_message.style, "{}", _message.value);
 
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
